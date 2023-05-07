@@ -19,7 +19,7 @@ class AbsArchitecture(nn.Module):
     """
     def __init__(self, task_name, encoder_class, decoders, rep_grad, multi_input, device, **kwargs):
         super(AbsArchitecture, self).__init__()
-        
+
         self.task_name = task_name
         self.task_num = len(task_name)
         self.encoder_class = encoder_class
@@ -28,11 +28,11 @@ class AbsArchitecture(nn.Module):
         self.multi_input = multi_input
         self.device = device
         self.kwargs = kwargs
-        
+
         if self.rep_grad:
             self.rep_tasks = {}
             self.rep = {}
-    
+
     def forward(self, inputs, task_name=None):
         r"""
 
