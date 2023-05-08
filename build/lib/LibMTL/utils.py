@@ -21,7 +21,7 @@ def set_device(gpu_id):
     Args:
         gpu_id (str, default='0'): The id of gpu.
     """
-    os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
+    os.environ["CUDA_VISIBLE_DEVICES"] = gpu_id
 
 def count_parameters(model):
     r'''Calculate the number of parameters for a model.

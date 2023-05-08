@@ -131,11 +131,9 @@ def prepare_args(params):
         raise ValueError('No support optim method {}'.format(params.optim))
         
     if params.scheduler is not None:
-        if params.scheduler in ['step', 'cos', 'exp', 'multistep']:
+        if params.scheduler in ['step', 'cos', 'exp']:
             if params.scheduler == 'step':
                 scheduler_param = {'scheduler': 'step', 'step_size': params.step_size, 'gamma': params.gamma}
-            if params.scheduler == 'multistep':
-                scheduler_param = {'scheduler': 'multistep', 'milestones': params.milestones, 'gamma': params.gamma}
         else:
             raise ValueError('No support scheduler method {}'.format(params.scheduler))
     else:
@@ -153,7 +151,7 @@ def _display(params, kwargs, optim_param, scheduler_param):
     print('\tRep_Grad:', params.rep_grad)
     print('\tMulti_Input:', params.multi_input)
     print('\tSeed:', params.seed)
-    print('\tDevice: {}'.format('cuda:'+str(params.gpu_id) if torch.cuda.is_available() else 'cpu'))
+    print('\tDevice: {}'.format('cuda:'+params.gpu_id if torch.cuda.is_available() else 'cpu'))
     for wa, p in zip(['weight_args', 'arch_args'], [params.weighting, params.arch]):
         if kwargs[wa] != {}:
             print('{} Configuration:'.format(p))

@@ -2,9 +2,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
-import os
-from time import time
-import datetime
 
 from LibMTL._record import _PerformanceMeter
 from LibMTL.utils import count_parameters
@@ -108,7 +105,6 @@ class Trainer(nn.Module):
                               multi_input=self.multi_input,
                               device=self.device,
                               kwargs=self.kwargs['arch_args']).to(self.device)
-        print(self.model)
         count_parameters(self.model)
         
     def _prepare_optimizer(self, optim_param, scheduler_param):
@@ -123,7 +119,6 @@ class Trainer(nn.Module):
                 'step': torch.optim.lr_scheduler.StepLR,
                 'cos': torch.optim.lr_scheduler.CosineAnnealingLR,
                 'reduce': torch.optim.lr_scheduler.ReduceLROnPlateau,
-                'multistep': torch.optim.lr_scheduler.MultiStepLR,
             }
         optim_arg = {k: v for k, v in optim_param.items() if k != 'optim'}
         self.optimizer = optim_dict[optim_param['optim']](self.model.parameters(), **optim_arg)
@@ -181,16 +176,6 @@ class Trainer(nn.Module):
                 batch_num.append(len(dataloaders[task]))
             return loader, batch_num
 
-    def _cal_time_scheduler(self, start_time, epoch_idx):
-        total_epoch = self.params.epoch - 1
-        now_epoch = epoch_idx
-
-        time_consum = datetime.datetime.now() - datetime.datetime.fromtimestamp(start_time)
-        time_consum -= datetime.timedelta(microseconds=time_consum.microseconds)
-        time_remain = (time_consum * (total_epoch - now_epoch)) / (now_epoch)
-        res_str = str(time_consum) + "/" + str(time_remain + time_consum)
-        return res_str
-
     def train(self, train_dataloaders, test_dataloaders, epochs, 
               val_dataloaders=None, return_weight=False):
         r'''The training process of multi-task learning.
@@ -212,9 +197,7 @@ class Trainer(nn.Module):
         self.batch_weight = np.zeros([self.task_num, epochs, train_batch])
         self.model.train_loss_buffer = np.zeros([self.task_num, epochs])
         self.model.epochs = epochs
-        experiment_begin = time()
         for epoch in range(epochs):
-            self.epoch = epoch
             self.model.epoch = epoch
             self.model.train()
             self.meter.record_time('begin')
@@ -240,19 +223,6 @@ class Trainer(nn.Module):
                 if w is not None:
                     self.batch_weight[:, epoch, batch_index] = w
                 self.optimizer.step()
-                
-                if ((batch_index + 1) % 50 == 0) or \
-                    ((batch_index + 1) >= train_batch):
-                    info_str = (
-                        "Epoch-({}): [{}/{}]\t"
-                        "Loss {}".format(
-                            epoch,
-                            (batch_index + 1),
-                            train_batch,
-                            train_losses
-                        )
-                    )
-                    print(info_str)
             
             self.meter.record_time('end')
             self.meter.get_score()
@@ -269,17 +239,10 @@ class Trainer(nn.Module):
                     self.scheduler.step(val_improvement)
                 else:
                     self.scheduler.step()
-            time_scheduler = self._cal_time_scheduler(experiment_begin, epoch + 1)
-            print(" * Time: {}".format(time_scheduler))
-
         self.meter.display_best_result()
         if return_weight:
             return self.batch_weight
 
-    def _save_model(self):
-        save_name = os.path.join(self.ckpt_path, "{:0>5d}.pth".format(self.epoch))
-        torch.save(self.model.state_dict(), save_name)
-        return save_name
 
     def test(self, test_dataloaders, epoch=None, mode='test', return_improvement=False):
         r'''The test process of multi-task learning.
@@ -314,8 +277,6 @@ class Trainer(nn.Module):
         self.meter.record_time('end')
         self.meter.get_score()
         self.meter.display(epoch=epoch, mode=mode)
-        if self.meter.improved:
-            self._save_model()
         improvement = self.meter.improvement
         self.meter.reinit()
         if return_improvement:

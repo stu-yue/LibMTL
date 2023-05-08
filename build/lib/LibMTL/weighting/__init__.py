@@ -10,7 +10,7 @@ from LibMTL.weighting.PCGrad import PCGrad
 from LibMTL.weighting.GradVac import GradVac
 from LibMTL.weighting.IMTL import IMTL
 from LibMTL.weighting.CAGrad import CAGrad
-# from LibMTL.weighting.Nash_MTL import Nash_MTL
+from LibMTL.weighting.Nash_MTL import Nash_MTL
 from LibMTL.weighting.RLW import RLW
 
 __all__ = ['AbsWeighting',
@@ -25,5 +25,5 @@ __all__ = ['AbsWeighting',
            'GradVac',
            'IMTL',
            'CAGrad',
-        #    'Nash_MTL',
+           'Nash_MTL',
            'RLW']

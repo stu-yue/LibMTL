@@ -24,7 +24,6 @@ class _PerformanceMeter(object):
         self.loss_item = np.zeros(self.task_num)
         
         self.has_val = False
-        self.improved = False
         
         self._init_display()
         
@@ -52,21 +51,19 @@ class _PerformanceMeter(object):
     
     def _init_display(self):
         print('='*40)
-        init_str = 'LOG FORMAT | '
+        print('LOG FORMAT | ', end='')
         for tn, task in enumerate(self.task_name):
-            init_str += task+'_LOSS '
+            print(task+'_LOSS ', end='')
             for m in self.task_dict[task]['metrics']:
-                init_str += m+' '
-            init_str += '| '
-        init_str += 'TIME'
-        print(init_str)
+                print(m+' ', end='')
+            print('| ', end='')
+        print('TIME')
     
     def display(self, mode, epoch):
-        display_str = ''
         if epoch == 0 and self.base_result is None and mode==('val' if self.has_val else 'test'):
             self.base_result = self.results
         if mode == 'train':
-            display_str += 'Epoch: {:04d} | '.format(epoch)
+            print('Epoch: {:04d} | '.format(epoch), end='')
         if not self.has_val and mode == 'test':
             self._update_best_result(self.results, epoch)
         if self.has_val and mode != 'train':
@@ -77,15 +74,14 @@ class _PerformanceMeter(object):
             p_mode = 'VAL'
         else:
             p_mode = 'TEST'
-        display_str += '{}: '.format(p_mode)
+        print('{}: '.format(p_mode), end='')
         for tn, task in enumerate(self.task_name):
-            display_str += '{:.4f} '.format(self.loss_item[tn])
+            print('{:.4f} '.format(self.loss_item[tn]), end='')
             for i in range(len(self.results[task])):
-                display_str += '{:.4f} '.format(self.results[task][i])
-            display_str += '| '
-        display_str += 'Time: {:.4f}'.format(self.end_time-self.beg_time)
-        display_str += (' | ' if mode!='test' else '')
-        print(display_str)
+                print('{:.4f} '.format(self.results[task][i]), end='')
+            print('| ', end='')
+        print('Time: {:.4f}'.format(self.end_time-self.beg_time), end='')
+        print(' | ', end='') if mode!='test' else print()
         
     def display_best_result(self):
         print('='*40)
@@ -93,14 +89,12 @@ class _PerformanceMeter(object):
         print('='*40)
         
     def _update_best_result_by_val(self, new_result, epoch, mode):
-        self.improved = False
         if mode == 'val':
             improvement = count_improvement(self.base_result, new_result, self.weight)
             self.improvement = improvement
             if improvement > self.best_result['improvement']:
                 self.best_result['improvement'] = improvement
                 self.best_result['epoch'] = epoch
-                self.improved = True
         else:
             if epoch == self.best_result['epoch']:
                 self.best_result['result'] = new_result
@@ -108,12 +102,10 @@ class _PerformanceMeter(object):
     def _update_best_result(self, new_result, epoch):
         improvement = count_improvement(self.base_result, new_result, self.weight)
         self.improvement = improvement
-        self.improved = False
         if improvement > self.best_result['improvement']:
             self.best_result['improvement'] = improvement
             self.best_result['epoch'] = epoch
             self.best_result['result'] = new_result
-            self.improved = True
         
     def reinit(self):
         for task in self.task_name:
